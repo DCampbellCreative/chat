@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, View, Text, TextInput, Pressable, ImageBackground } from 'react-native';
+import { StyleSheet, View, Text, TextInput, Pressable, ImageBackground, KeyboardAvoidingView } from 'react-native';
 
 const image = require('../assets/background.png');
 
@@ -12,47 +12,49 @@ export const Start = ({ navigation }) => {
 	return (
 		// background Image to be rendered behind all other components
 		<ImageBackground source={image} style={styles.image}>
-			{/* main container 100% flex size */}
-			<View style={styles.container}>
-				{/* title, position absolute */}
-				<Text style={styles.title}>Chat</Text>
-				{/* secondary container 44% flex size, backgroundColor white */}
-				<View style={styles.container2}>
-					{/* tertiary container 88% of parent container, holds main interactive elements */}
-					<View style={styles.container3}>
+			<KeyboardAvoidingView behavior="height">
+				{/* main container 100% flex size */}
+				<View style={styles.container}>
+					{/* title, position absolute */}
+					<Text style={styles.title}>Chat</Text>
+					{/* secondary container 44% flex size, backgroundColor white */}
+					<View style={styles.container2}>
+						{/* tertiary container 88% of parent container, holds main interactive elements */}
+						<View style={styles.container3}>
 
-						{/* text input for userName, sets state of userName */}
-						<TextInput
-							style={styles.input}
-							value={userName}
-							onChangeText={userName => setUserName(userName)}
-							placeholder="Your Name"
-						/>
+							{/* text input for userName, sets state of userName */}
+							<TextInput
+								style={styles.input}
+								value={userName}
+								onChangeText={userName => setUserName(userName)}
+								placeholder="Your Name"
+							/>
 
-						{/* pressables for choosing bgColor and setting it to state, called in chat screen */}
-						<View style={styles.colorPicker}>
-							<Text style={styles.chooseColor}>Choose Background Color</Text>
-							<View style={styles.colorOptions}>
-								<Pressable style={styles.colorOption1} onPress={() => setBgColor("#090C08")}></Pressable>
-								<Pressable style={styles.colorOption2} onPress={() => setBgColor("#474056")}></Pressable>
-								<Pressable style={styles.colorOption3} onPress={() => setBgColor("#8A95A5")}></Pressable>
-								<Pressable style={styles.colorOption4} onPress={() => setBgColor("#B9C6AE")}></Pressable>
+							{/* pressables for choosing bgColor and setting it to state, called in chat screen */}
+							<View style={styles.colorPicker}>
+								<Text style={styles.chooseColor}>Choose Background Color</Text>
+								<View style={styles.colorOptions}>
+									<Pressable style={styles.colorOption1} onPress={() => setBgColor("#090C08")}></Pressable>
+									<Pressable style={styles.colorOption2} onPress={() => setBgColor("#474056")}></Pressable>
+									<Pressable style={styles.colorOption3} onPress={() => setBgColor("#8A95A5")}></Pressable>
+									<Pressable style={styles.colorOption4} onPress={() => setBgColor("#B9C6AE")}></Pressable>
+								</View>
 							</View>
+
+							{/* pressable to navigate to chat screen and passes states to chat screen as navigation parameters */}
+							<Pressable
+								style={styles.pressable}
+								onPress={() => navigation.navigate('Chat', {
+									userName,
+									bgColor
+								})}>
+								<Text style={styles.pressableText}>Start Chatting</Text>
+							</Pressable>
+
 						</View>
-
-						{/* pressable to navigate to chat screen and passes states to chat screen as navigation parameters */}
-						<Pressable
-							style={styles.pressable}
-							onPress={() => navigation.navigate('Chat', {
-								userName,
-								bgColor
-							})}>
-							<Text style={styles.pressableText}>Start Chatting</Text>
-						</Pressable>
-
 					</View>
 				</View>
-			</View>
+			</KeyboardAvoidingView>
 		</ImageBackground>
 	);
 };
@@ -75,14 +77,13 @@ const styles = StyleSheet.create({
 		backgroundColor: 'white',
 		height: '44%',
 		width: '88%',
-		flexDirection: 'column',
 		justifyContent: 'center',
-		alignItems: 'center'
+		alignItems: 'center',
 	},
 	container3: {
 		height: '88%',
 		width: '88%',
-		justifyContent: 'space-between',
+		position: 'absolute',
 		alignItems: 'center',
 	},
 	title: {
@@ -100,18 +101,21 @@ const styles = StyleSheet.create({
 		borderColor: 'gray',
 		height: 40,
 		width: '100%',
-		borderWidth: 1
+		borderWidth: 1,
+		position: 'absolute',
 	},
 	colorPicker: {
 		alignItems: "center",
 		flexDirection: 'column',
+		position: 'absolute',
+		margin: 65,
 		width: '100%',
 	},
 	chooseColor: {
 		marginBottom: 5,
 		fontSize: 16,
 		fontWeight: "200",
-		color: '#757083'
+		color: '#757083',
 	},
 	colorOptions: {
 		width: '100%',
@@ -145,7 +149,9 @@ const styles = StyleSheet.create({
 		height: 40,
 		width: '100%',
 		alignItems: 'center',
-		justifyContent: 'center'
+		justifyContent: 'center',
+		position: 'absolute',
+		margin: 185
 	},
 	pressableText: {
 		fontSize: 16,
