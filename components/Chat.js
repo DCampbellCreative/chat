@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { StyleSheet, View, Text, Platform, KeyboardAvoidingView } from 'react-native';
-import { GiftedChat } from 'react-native-gifted-chat';
+import { GiftedChat, Bubble } from 'react-native-gifted-chat';
 
 // renders chat screen
 export const Chat = ({ route, navigation }) => {
@@ -14,7 +14,7 @@ export const Chat = ({ route, navigation }) => {
 		setMessages([
 			{
 				_id: 1,
-				text: 'Hello developer',
+				text: 'Hello ' + userName,
 				createdAt: new Date(),
 				user: {
 					_id: 2,
@@ -24,7 +24,7 @@ export const Chat = ({ route, navigation }) => {
 			},
 			{
 				_id: 2,
-				text: 'This is a system message',
+				text: userName + ' has entered the chat',
 				createdAt: new Date(),
 				system: true,
 			},
@@ -35,6 +35,7 @@ export const Chat = ({ route, navigation }) => {
 	const onSend = useCallback((messages = []) => {
 		setMessages(previousMessages => GiftedChat.append(previousMessages, messages))
 	}, [])
+
 
 	return (
 		// main container 100% flex size

@@ -16,7 +16,13 @@ export const Start = ({ navigation }) => {
 				{/* main container 100% flex size */}
 				<View style={styles.container}>
 					{/* title, position absolute */}
-					<Text style={styles.title}>Chat</Text>
+					<Text
+						style={styles.title}
+						accessible={false}
+						accessibilityLabel="Chat"
+					>
+						Chat
+					</Text>
 					{/* secondary container 44% flex size, backgroundColor white */}
 					<View style={styles.container2}>
 						{/* tertiary container 88% of parent container, holds main interactive elements */}
@@ -27,17 +33,53 @@ export const Start = ({ navigation }) => {
 								style={styles.input}
 								value={userName}
 								onChangeText={userName => setUserName(userName)}
-								placeholder="Your Name"
+								placeholder="Enter Username"
+								accessible={true}
+								accessibilityLabel="Enter username"
+								accessibilityHint="Enter your username to be displayed in the chat"
 							/>
 
 							{/* pressables for choosing bgColor and setting it to state, called in chat screen */}
 							<View style={styles.colorPicker}>
-								<Text style={styles.chooseColor}>Choose Background Color</Text>
+								<Text style={styles.chooseColor}
+									accessible={false}
+									accessibilityLabel="Choose background color"
+								>
+									Choose Background Color
+								</Text>
 								<View style={styles.colorOptions}>
-									<Pressable style={styles.colorOption1} onPress={() => setBgColor("#090C08")}></Pressable>
-									<Pressable style={styles.colorOption2} onPress={() => setBgColor("#474056")}></Pressable>
-									<Pressable style={styles.colorOption3} onPress={() => setBgColor("#8A95A5")}></Pressable>
-									<Pressable style={styles.colorOption4} onPress={() => setBgColor("#B9C6AE")}></Pressable>
+									<Pressable
+										style={styles.colorOption1}
+										onPress={() => setBgColor("#090C08")}
+										accessible={true}
+										accessibilityLabel="Color black"
+										accessibilityHint="Chooses black for your chats background color"
+									>
+									</Pressable>
+									<Pressable
+										style={styles.colorOption2}
+										onPress={() => setBgColor("#474056")}
+										accessible={true}
+										accessibilityLabel="Color gray"
+										accessibilityHint="Chooses gray for your chats background color"
+									>
+									</Pressable>
+									<Pressable
+										style={styles.colorOption3}
+										onPress={() => setBgColor("#8A95A5")}
+										accessible={true}
+										accessibilityLabel="Color blue"
+										accessibilityHint="Chooses blue for your chats background color"
+									>
+									</Pressable>
+									<Pressable
+										style={styles.colorOption4}
+										onPress={() => setBgColor("#B9C6AE")}
+										accessible={true}
+										accessibilityLabel="Color green"
+										accessibilityHint="Chooses green for your chats background color"
+									>
+									</Pressable>
 								</View>
 							</View>
 
@@ -47,7 +89,11 @@ export const Start = ({ navigation }) => {
 								onPress={() => navigation.navigate('Chat', {
 									userName,
 									bgColor
-								})}>
+								})}
+								accessible={true}
+								accessibilityLabel="Start chatting"
+								accessibilityHint="Enters the chat with your selected username and background color"
+							>
 								<Text style={styles.pressableText}>Start Chatting</Text>
 							</Pressable>
 
