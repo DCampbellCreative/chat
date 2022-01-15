@@ -27,34 +27,11 @@ export const Chat = ({ route, navigation }) => {
 	// imports states from start screen as route parameters
 	const { userName, bgColor } = route.params
 
-	// useEffect(() => {
-	// 	if (!messages) {
-	// 		const test = firebase.firestore().collection('messages').where("user", "==", 'test')
-	// 		test.onSnapshot(onCollectionUpdate)
-	// 	}
-	// }, [])
-
-	// const onCollectionUpdate = (querySnapshot) => {
-	// 	const userMessages = [];
-	// 	// go through each document
-	// 	querySnapshot.forEach((doc) => {
-	// 		// get the QueryDocumentSnapshot's data
-	// 		var data = doc.data();
-	// 		userMessages.push({
-	// 			text: data.text,
-	// 			createdAt: new Date(data.createdAt.seconds * 1000),
-	// 			user: data.user,
-	// 			_id: data._id
-	// 		});
-	// 	});
-	// 	console.log(userMessages)
-	// 	const sorted = userMessages.sort((a, b) => {
-	// 		return a.createdAt - b.createdAt;
-	// 	});
-	// 	setMessages(sorted);
-	// };
-
 	useEffect(() => {
+		if (!messages) {
+			const test = firebase.firestore().collection('messages').where("user", "==", 'test')
+			test.onSnapshot(onCollectionUpdate)
+		}
 		setMessages([
 			{
 				_id: 1,
@@ -69,31 +46,66 @@ export const Chat = ({ route, navigation }) => {
 		])
 	}, [])
 
-	const onSend = useCallback((messages = []) => {
-		setMessages(previousMessages => GiftedChat.append(previousMessages, messages))
-		const { _id, createdAt, text, user, } = messages[0]
-		firebase.firestore().collection('messages').add({ _id, createdAt, text, user })
-	}, [])
+	const onCollectionUpdate = (querySnapshot) => {
+		const userMessages = [];
+		// go through each document
+		querySnapshot.forEach((doc) => {
+			// get the QueryDocumentSnapshot's data
+			var data = doc.data();
+			userMessages.push({
+				text: data.text,
+				createdAt: new Date(data.createdAt.seconds * 1000),
+				user: data.user,
+				_id: data._id
+			});
+		});
+		console.log(userMessages)
+		// const sorted = userMessages.sort((a, b) => {
+		// 	return a.createdAt - b.createdAt;
+		// });
+		setMessages(userMessages);
+	};
 
-	// called when user sends a message, previous messages are appended to state
-	// const onSend = useCallback((msg = []) => {
-	// 	console.log('in callback', msg)
-	// 	GiftedChat.append(msg)
-
-	// 	setMessages(prevMessages => {
-	// 		return [...prevMessages, msg[0]]
-	// 	})
-	// 	addMessages(msg[0]);
+	// useEffect(() => {
+	// 	setMessages([
+	// 		{
+	// 			_id: 1,
+	// 			text: 'Hello developer',
+	// 			createdAt: new Date(),
+	// 			user: {
+	// 				_id: 2,
+	// 				name: 'React Native',
+	// 				avatar: 'https://placeimg.com/140/140/any',
+	// 			},
+	// 		},
+	// 	])
 	// }, [])
 
-	// const addMessages = (msg) => {
-	// 	firebase.firestore().collection('messages').add({
-	// 		text: msg.text,
-	// 		createdAt: msg.createdAt,
-	// 		user: userName,
-	// 		_id: msg._id,
-	// 	});
-	// }
+	// const onSend = useCallback((messages = []) => {
+	// 	setMessages(previousMessages => GiftedChat.append(previousMessages, messages))
+	// 	const { _id, createdAt, text, user, } = messages[0]
+	// 	firebase.firestore().collection('messages').add({ _id, createdAt, text, user })
+	// }, [])
+
+	// called when user sends a message, previous messages are appended to state
+	const onSend = useCallback((msg = []) => {
+		console.log('in callback', msg)
+		GiftedChat.append(msg)
+
+		setMessages(prevMessages => {
+			return [...prevMessages, msg[0]]
+		})
+		addMessages(msg[0]);
+	}, [])
+
+	const addMessages = (msg) => {
+		firebase.firestore().collection('messages').add({
+			text: msg.text,
+			createdAt: msg.createdAt,
+			user: userName,
+			_id: msg._id,
+		});
+	}
 
 	console.log('render', messages)
 	return (
