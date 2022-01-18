@@ -7,7 +7,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 
 // imports screen components
 import { Start } from './components/Start';
-import { Chat } from './components/Chat';
+import Chat from './components/Chat';
 
 // creates navigation stack
 const Stack = createStackNavigator();
