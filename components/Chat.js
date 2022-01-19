@@ -32,127 +32,148 @@ export default class Chat extends Component {
 				_id: '',
 				name: '',
 				avatar: '',
-			}
+			},
+			loggedInText: 'Welcome!',
 		};
-
-
-
-
-
-		componentDidMount = () => {
-			this.referenceChatMessages = firebase.firestore().collection("messages");
-			this.unsubscribe = this.referenceChatMessages.onSnapshot(this.onCollectionUpdate)
-		};
-
-		componentWillUnmount = () => {
-			this.unsubscribe();
-		};
-
-		// 	setMessages([
-		// 		{
-		// 			_id: 1,
-		// 			text: 'Hello developer',
-		// 			createdAt: new Date(),
-		// 			user: {
-		// 				_id: 2,
-		// 				name: 'React Native',
-		// 				avatar: 'https://placeimg.com/140/140/any',
-		// 			},
-		// 		},
-		// 	])
-		// }, [])
-
-		onCollectionUpdate = (querySnapshot) => {
-			const messages = [];
-			// go through each document
-			querySnapshot.forEach((doc) => {
-				// get the QueryDocumentSnapshot's data
-				let data = doc.data();
-				messages.push({
-					_id: data._id,
-					text: data.text,
-					createdAt: data.createdAt.toDate(),
-					user: data.user,
-				});
-				this.setState({
-					messages,
-				})
-			})
-		};
-
-		addMessage = () => {
-			const message = this.state.messages[0];
-			// add a new message to the collection
-			this.referenceChatMessages.add({
-				_id: message._id,
-				text: message.text || '',
-				createdAt: message.createdAt,
-				user: this.state.user,
-			});
-		}
-
-		onSend = (messages = []) => {
-			this.setState(
-				previousState => ({
-					messages: GiftedChat.append(previousState.messages, messages),
-				}),
-				() => {
-					this.addMessage();
-				}
-			);
-		}
-
-		render() {
-			const { bgColor, userName } = this.props.route.params
-			return (
-				// main container 100% flex size
-				<View style={styles.container}>
-					{/* header 10% flex size, bgColor and userName change bases upon state set in start screen */}
-					<View style={{ ...styles.header, backgroundColor: bgColor }} >
-						<Text style={styles.username}>Username: {userName}</Text>
-					</View>
-
-					{
-						messages &&
-						<View style={styles.chatContainer}>
-							{/* renders GiftedChat interface */}
-							<GiftedChat
-								messages={this.state.messages}
-								onSend={onSend}
-								user={this.state.user}
-							/>
-							{/* renders KeyboardAvoidingView conditionally if users platform is android */}
-							{Platform.OS === 'android' ? <KeyboardAvoidingView behavior="height" /> : null}
-						</View>
-					}
-
-
-				</View>
-			);
-		}
 	}
 
+	componentDidMount() {
+		this.referenceChatMessages = firebase.firestore().collection("messages");
+		// this.unsubscribe = this.referenceChatMessages.onSnapshot(this.onCollectionUpdate)
 
-	// creates styleSheet for chat screen
-	const styles = StyleSheet.create({
-		container: {
-			height: '100%',
-			flexDirection: 'column',
-			justifyContent: 'flex-start'
-		},
-		header: {
-			height: '10%',
-			width: '100%',
-			flexDirection: 'column',
-			alignItems: 'center',
-			justifyContent: 'center'
-		},
-		username: {
-			fontSize: 16,
-			fontWeight: "300",
-			color: 'white',
-		},
-		chatContainer: {
-			flex: 1
-		}
-	})
+		this.authUnsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
+			if (!user) {
+				await firebase.auth().signInAnonymously();
+			}
+
+			this.setState({
+				uid: user.uid,
+				messages: [],
+				loggedInText: 'Hello there',
+			});
+
+			// create reference to active user's messages
+			this.referenceChatMessagesUser = firebase.firestore().collection('messages').where("uid", "==", this.state.uid);
+
+			// listens for collection changes for current user
+			this.unsubscribeListUser = this.referenceChatMessagesUser.onSnapshot(this.onCollectionUpdate);
+
+			this.unsubscribe = this.referenceChatMessages
+				.orderBy("createdAt", "desc")
+				.onSnapshot(this.onCollectionUpdate);
+		});
+	};
+
+	componentWillUnmount() {
+		this.unsubscribe();
+	};
+
+	// 	setMessages([
+	// 		{
+	// 			_id: 1,
+	// 			text: 'Hello developer',
+	// 			createdAt: new Date(),
+	// 			user: {
+	// 				_id: 2,
+	// 				name: 'React Native',
+	// 				avatar: 'https://placeimg.com/140/140/any',
+	// 			},
+	// 		},
+	// 	])
+	// }, [])
+
+	onCollectionUpdate = (querySnapshot) => {
+		const messages = [];
+		// go through each document
+		querySnapshot.forEach((doc) => {
+			// get the QueryDocumentSnapshot's data
+			let data = doc.data();
+			messages.push({
+				_id: data._id,
+				text: data.text,
+				createdAt: data.createdAt.toDate(),
+				user: data.user,
+			});
+			this.setState({
+				messages,
+			})
+		})
+	};
+
+	addMessage() {
+		const message = this.state.messages[0];
+		// add a new message to the collection
+		this.referenceChatMessages.add({
+			_id: message._id,
+			text: message.text || '',
+			createdAt: message.createdAt,
+			user: this.state.user,
+			uid: this.state.uid,
+		});
+	}
+
+	onSend = (messages = []) => {
+		this.setState(
+			previousState => ({
+				messages: GiftedChat.append(previousState.messages, messages),
+			}),
+			() => {
+				this.addMessage();
+			}
+		);
+	}
+
+	render() {
+		const { bgColor, userName } = this.props.route.params;
+		return (
+			<View style={styles.container}>
+				{/* header 10% flex size, bgColor and userName change bases upon state set in start screen */}
+				<View style={{ ...styles.header, backgroundColor: bgColor }} >
+					<Text style={styles.username}>Username: {userName}</Text>
+					<Text>{this.state.loggedInText}</Text>
+				</View>
+
+				{
+					this.state.messages &&
+					<View style={styles.chatContainer}>
+						{/* renders GiftedChat interface */}
+						<GiftedChat
+							messages={this.state.messages}
+							onSend={this.onSend}
+							user={this.state.user}
+						/>
+						{/* renders KeyboardAvoidingView conditionally if users platform is android */}
+						{Platform.OS === 'android' ? <KeyboardAvoidingView behavior="height" /> : null}
+					</View>
+				}
+
+
+			</View>
+		);
+	}
+}
+
+
+// creates styleSheet for chat screen
+const styles = StyleSheet.create({
+	container: {
+		height: '100%',
+		flexDirection: 'column',
+		justifyContent: 'flex-start'
+	},
+	header: {
+		height: '10%',
+		width: '100%',
+		flexDirection: 'column',
+		alignItems: 'center',
+		justifyContent: 'center'
+	},
+	username: {
+		fontSize: 16,
+		fontWeight: "300",
+		color: 'white',
+	},
+	chatContainer: {
+		flex: 1
+	}
+})
