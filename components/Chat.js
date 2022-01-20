@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import { StyleSheet, View, Text, Platform, KeyboardAvoidingView } from 'react-native';
-import { GiftedChat } from 'react-native-gifted-chat';
+import { GiftedChat, InputToolbar } from 'react-native-gifted-chat';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from '@react-native-community/netinfo';
 
 const firebase = require('firebase');
 require('firebase/firestore');
@@ -33,7 +35,7 @@ export default class Chat extends Component {
 				name: '',
 				avatar: '',
 			},
-			loggedInText: 'Welcome!',
+
 		};
 	}
 
@@ -41,31 +43,54 @@ export default class Chat extends Component {
 		this.referenceChatMessages = firebase.firestore().collection("messages");
 		// this.unsubscribe = this.referenceChatMessages.onSnapshot(this.onCollectionUpdate)
 
-		this.authUnsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
-			if (!user) {
-				await firebase.auth().signInAnonymously();
+		NetInfo.fetch().then(connection => {
+			if (connection.isConnected) {
+				console.log('online');
+
+
+				// anonymously authenticates user using firebase
+				this.authUnsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
+					if (!user) {
+						await firebase.auth().signInAnonymously();
+					}
+					this.setState({
+						uid: user.uid,
+						messages: [],
+						loggedInText: 'Welcome!',
+					});
+
+					console.log(user);
+
+					// create reference to active user's messages
+					this.referenceChatMessagesUser = firebase.firestore().collection('messages').where("uid", "==", this.state.uid);
+
+					// gets messages from firebase
+					this.getMessages();
+
+					// saves messages to firebase
+					this.saveMessages();
+
+					// listens for collection changes for current user
+					this.unsubscribeChatMessagesUser = this.referenceChatMessagesUser.onSnapshot(this.onCollectionUpdate);
+
+					this.unsubscribe = this.referenceChatMessages
+						.orderBy("createdAt", "desc")
+						.onSnapshot(this.onCollectionUpdate);
+				})
+			} else {
+
+				console.log('offline')
+
+
+				this.getMessages();
+
 			}
-
-			this.setState({
-				uid: user.uid,
-				messages: [],
-				loggedInText: 'Hello there',
-			});
-
-			// create reference to active user's messages
-			this.referenceChatMessagesUser = firebase.firestore().collection('messages').where("uid", "==", this.state.uid);
-
-			// listens for collection changes for current user
-			this.unsubscribeListUser = this.referenceChatMessagesUser.onSnapshot(this.onCollectionUpdate);
-
-			this.unsubscribe = this.referenceChatMessages
-				.orderBy("createdAt", "desc")
-				.onSnapshot(this.onCollectionUpdate);
 		});
 	};
 
 	componentWillUnmount() {
 		this.unsubscribe();
+		this.authUnsubscribe();
 	};
 
 	// 	setMessages([
@@ -100,6 +125,7 @@ export default class Chat extends Component {
 		})
 	};
 
+	// add message to firebase
 	addMessage() {
 		const message = this.state.messages[0];
 		// add a new message to the collection
@@ -112,23 +138,59 @@ export default class Chat extends Component {
 		});
 	}
 
+	// retrieve messages from AsyncStorage
+	getMessages = async () => {
+		let messages = '';
+		try {
+			messages = await AsyncStorage.getItem('messages') || [];
+			this.setState({
+				messages: JSON.parse(messages)
+			});
+		} catch (error) {
+			console.log(error.message);
+		}
+	}
+
+	// store messages when a new message is added
+	saveMessages = async () => {
+		try {
+			await AsyncStorage.setItem('messages', JSON.stringify(this.state.messages));
+		} catch (error) {
+			console.log(error.message);
+		}
+	}
+
+	// add messages when a message is sent
 	onSend = (messages = []) => {
 		this.setState(
 			previousState => ({
 				messages: GiftedChat.append(previousState.messages, messages),
 			}),
 			() => {
-				this.addMessage();
+				this.saveMessages();
 			}
 		);
 	}
 
-	render() {
+	// deletes message
+	deleteMessages = async () => {
+		try {
+			await AsyncStorage.removeItem('messages');
+			this.setState({
+				messages: []
+			})
+		} catch (error) {
+			console.log(error.message);
+		}
+	}
+
+	render(props) {
 		const { bgColor, userName } = this.props.route.params;
 		return (
 			<View style={styles.container}>
 				{/* header 10% flex size, bgColor and userName change bases upon state set in start screen */}
 				<View style={{ ...styles.header, backgroundColor: bgColor }} >
+					{/* <View style={styles.border}></View> */}
 					<Text style={styles.username}>Username: {userName}</Text>
 					<Text>{this.state.loggedInText}</Text>
 				</View>
@@ -140,7 +202,9 @@ export default class Chat extends Component {
 						<GiftedChat
 							messages={this.state.messages}
 							onSend={this.onSend}
-							user={this.state.user}
+							user={{
+								_id: this.state.uid,
+							}}
 						/>
 						{/* renders KeyboardAvoidingView conditionally if users platform is android */}
 						{Platform.OS === 'android' ? <KeyboardAvoidingView behavior="height" /> : null}
@@ -162,11 +226,18 @@ const styles = StyleSheet.create({
 		justifyContent: 'flex-start'
 	},
 	header: {
-		height: '10%',
+		height: 60,
 		width: '100%',
 		flexDirection: 'column',
 		alignItems: 'center',
 		justifyContent: 'center'
+	},
+	border: {
+		width: '100%',
+		borderStyle: 'solid',
+		borderBottomWidth: 1,
+		position: 'absolute',
+		top: 60,
 	},
 	username: {
 		fontSize: 16,

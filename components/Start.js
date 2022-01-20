@@ -24,7 +24,10 @@ export const Start = ({ navigation }) => {
 						Chat
 					</Text>
 					{/* secondary container 44% flex size, backgroundColor white */}
+					{/* <View style={styles.border}></View>
+					<View style={styles.border2}></View> */}
 					<View style={styles.container2}>
+
 						{/* tertiary container 88% of parent container, holds main interactive elements */}
 						<View style={styles.container3}>
 
@@ -121,10 +124,24 @@ const styles = StyleSheet.create({
 	},
 	container2: {
 		backgroundColor: 'white',
-		height: '44%',
+		height: 255,
 		width: '88%',
 		justifyContent: 'center',
 		alignItems: 'center',
+	},
+	border: {
+		width: '100%',
+		borderStyle: 'solid',
+		borderBottomWidth: 1,
+		position: 'absolute',
+		top: 118,
+	},
+	border2: {
+		width: '100%',
+		borderStyle: 'solid',
+		borderBottomWidth: 1,
+		position: 'absolute',
+		bottom: 25,
 	},
 	container3: {
 		height: '88%',
@@ -134,7 +151,7 @@ const styles = StyleSheet.create({
 	},
 	title: {
 		position: 'absolute',
-		top: '12%',
+		top: 70,
 		fontSize: 45,
 		fontWeight: "600",
 		color: 'white',
