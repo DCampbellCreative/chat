@@ -31,11 +31,10 @@ export default class Chat extends Component {
 			messages: [],
 			uid: 0,
 			user: {
-				_id: '',
+				_id: 0,
 				name: '',
-				avatar: '',
 			},
-
+			isConnected: false,
 		};
 	}
 
@@ -47,6 +46,8 @@ export default class Chat extends Component {
 			if (connection.isConnected) {
 				console.log('online');
 
+				//sets state to online
+				this.setState({ isConnected: true });
 
 				// anonymously authenticates user using firebase
 				this.authUnsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
@@ -65,10 +66,9 @@ export default class Chat extends Component {
 					this.referenceChatMessagesUser = firebase.firestore().collection('messages').where("uid", "==", this.state.uid);
 
 					// gets messages from firebase
-					this.getMessages();
+					// this.getMessages();
 
-					// saves messages to firebase
-					this.saveMessages();
+
 
 					// listens for collection changes for current user
 					this.unsubscribeChatMessagesUser = this.referenceChatMessagesUser.onSnapshot(this.onCollectionUpdate);
@@ -76,12 +76,16 @@ export default class Chat extends Component {
 					this.unsubscribe = this.referenceChatMessages
 						.orderBy("createdAt", "desc")
 						.onSnapshot(this.onCollectionUpdate);
+
+					// saves messages to firebase
+					this.saveMessages();
 				})
+
 			} else {
 
-				console.log('offline')
-
-
+				console.log('offline');
+				// sets state to offline
+				this.setState({ isConnected: false });
 				this.getMessages();
 
 			}
@@ -89,8 +93,8 @@ export default class Chat extends Component {
 	};
 
 	componentWillUnmount() {
-		this.unsubscribe();
 		this.authUnsubscribe();
+		this.unsubscribe();
 	};
 
 	// 	setMessages([
@@ -167,6 +171,7 @@ export default class Chat extends Component {
 				messages: GiftedChat.append(previousState.messages, messages),
 			}),
 			() => {
+				this.addMessage();
 				this.saveMessages();
 			}
 		);
@@ -184,7 +189,20 @@ export default class Chat extends Component {
 		}
 	}
 
-	render(props) {
+	// hides toolbar if user is offline
+	renderInputToolbar = (props) => {
+		if (this.state.isConnected == false) {
+		} else {
+			return (
+				<InputToolbar
+					{...props}
+				/>
+			);
+		}
+	}
+
+
+	render() {
 		const { bgColor, userName } = this.props.route.params;
 		return (
 			<View style={styles.container}>
@@ -200,12 +218,14 @@ export default class Chat extends Component {
 					<View style={styles.chatContainer}>
 						{/* renders GiftedChat interface */}
 						<GiftedChat
+							renderInputToolbar={this.renderInputToolbar}
 							messages={this.state.messages}
-							onSend={this.onSend}
+							onSend={messages => this.onSend(messages)}
 							user={{
 								_id: this.state.uid,
 							}}
 						/>
+
 						{/* renders KeyboardAvoidingView conditionally if users platform is android */}
 						{Platform.OS === 'android' ? <KeyboardAvoidingView behavior="height" /> : null}
 					</View>
