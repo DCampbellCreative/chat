@@ -40,46 +40,48 @@ export default class Chat extends Component {
 
 	componentDidMount() {
 		this.referenceChatMessages = firebase.firestore().collection("messages");
-		// this.unsubscribe = this.referenceChatMessages.onSnapshot(this.onCollectionUpdate)
 
 		NetInfo.fetch().then(connection => {
 			if (connection.isConnected) {
-				console.log('online');
 
 				//sets state to online
 				this.setState({ isConnected: true });
+				console.log('online');
+
+				this.unsubscribe = this.referenceChatMessages
+					.orderBy("createdAt", "desc")
+					.onSnapshot(this.onCollectionUpdate);
 
 				// anonymously authenticates user using firebase
-				this.authUnsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
-					if (!user) {
-						await firebase.auth().signInAnonymously();
-					}
-					this.setState({
-						uid: user.uid,
-						messages: [],
-						loggedInText: 'Welcome!',
+				this.authUnsubscribe = firebase
+					.auth()
+					.onAuthStateChanged(async (user) => {
+						if (!user) {
+							return await firebase.auth().signInAnonymously();
+						}
+						this.setState({
+							uid: user.uid,
+							messages: [],
+							user: {
+								_id: user.uid,
+								name: name,
+							},
+							loggedInText: 'Welcome!',
+						});
 					});
+				console.log(user);
 
-					console.log(user);
+				// create reference to active user's messages
+				// this.referenceChatMessagesUser = firebase.firestore().collection('messages').where("uid", "==", this.state.uid);
 
-					// create reference to active user's messages
-					this.referenceChatMessagesUser = firebase.firestore().collection('messages').where("uid", "==", this.state.uid);
+				// gets messages from firebase
+				// this.getMessages();
 
-					// gets messages from firebase
-					// this.getMessages();
+				// listens for collection changes for current user
+				// this.unsubscribeChatMessagesUser = this.referenceChatMessagesUser.onSnapshot(this.onCollectionUpdate);
 
-
-
-					// listens for collection changes for current user
-					this.unsubscribeChatMessagesUser = this.referenceChatMessagesUser.onSnapshot(this.onCollectionUpdate);
-
-					this.unsubscribe = this.referenceChatMessages
-						.orderBy("createdAt", "desc")
-						.onSnapshot(this.onCollectionUpdate);
-
-					// saves messages to firebase
-					this.saveMessages();
-				})
+				// saves messages to firebase
+				this.saveMessages();
 
 			} else {
 
@@ -90,11 +92,14 @@ export default class Chat extends Component {
 
 			}
 		});
-	};
+	}
 
 	componentWillUnmount() {
-		this.authUnsubscribe();
-		this.unsubscribe();
+		if (this.state.isConnected == false) {
+		} else {
+			this.authUnsubscribe();
+			this.unsubscribe();
+		}
 	};
 
 	// 	setMessages([
@@ -146,7 +151,7 @@ export default class Chat extends Component {
 	getMessages = async () => {
 		let messages = '';
 		try {
-			messages = await AsyncStorage.getItem('messages') || [];
+			messages = (await AsyncStorage.getItem('messages')) || [];
 			this.setState({
 				messages: JSON.parse(messages)
 			});
@@ -167,7 +172,7 @@ export default class Chat extends Component {
 	// add messages when a message is sent
 	onSend = (messages = []) => {
 		this.setState(
-			previousState => ({
+			(previousState) => ({
 				messages: GiftedChat.append(previousState.messages, messages),
 			}),
 			() => {
@@ -197,7 +202,7 @@ export default class Chat extends Component {
 				<InputToolbar
 					{...props}
 				/>
-			);
+			)
 		}
 	}
 
@@ -222,7 +227,8 @@ export default class Chat extends Component {
 							messages={this.state.messages}
 							onSend={messages => this.onSend(messages)}
 							user={{
-								_id: this.state.uid,
+								_id: this.state.user._id,
+								name: this.state.name,
 							}}
 						/>
 
