@@ -3,6 +3,8 @@ import { StyleSheet, View, Text, Platform, KeyboardAvoidingView } from 'react-na
 import { GiftedChat, InputToolbar } from 'react-native-gifted-chat';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
+import CustomActions from './CustomActions';
+import MapView from 'react-native-maps';
 
 const firebase = require('firebase');
 require('firebase/firestore');
@@ -35,6 +37,8 @@ export default class Chat extends Component {
 				name: '',
 			},
 			isConnected: false,
+			image: null,
+			location: null,
 		};
 	}
 
@@ -127,10 +131,12 @@ export default class Chat extends Component {
 				text: data.text,
 				createdAt: data.createdAt.toDate(),
 				user: data.user,
+				image: data.image || null,
+				location: data.location || null,
 			});
-			this.setState({
-				messages,
-			})
+		});
+		this.setState({
+			messages,
 		})
 	};
 
@@ -206,6 +212,32 @@ export default class Chat extends Component {
 		}
 	}
 
+	renderCustomActions = (props) => {
+		return <CustomActions {...props} />;
+	}
+
+	renderCustomView(props) {
+		const { currentMessage } = props;
+		if (currentMessage.location) {
+			return (
+				<MapView
+					style={{
+						width: 150,
+						height: 100,
+						borderRadius: 13,
+						margin: 3
+					}}
+					region={{
+						latitude: currentMessage.location.latitude,
+						longitude: currentMessage.location.longitude,
+						latitudeDelta: 0.0922,
+						longitudeDelta: 0.0421,
+					}}
+				/>
+			);
+		}
+		return null;
+	}
 
 	render() {
 		const { bgColor, userName } = this.props.route.params;
@@ -223,6 +255,8 @@ export default class Chat extends Component {
 					<View style={styles.chatContainer}>
 						{/* renders GiftedChat interface */}
 						<GiftedChat
+							renderActions={this.renderCustomActions}
+							renderCustomView={this.renderCustomView}
 							renderInputToolbar={this.renderInputToolbar}
 							messages={this.state.messages}
 							onSend={messages => this.onSend(messages)}
@@ -242,7 +276,6 @@ export default class Chat extends Component {
 		);
 	}
 }
-
 
 // creates styleSheet for chat screen
 const styles = StyleSheet.create({
