@@ -39,7 +39,7 @@ export default class CustomActions extends Component {
 
 				if (!result.cancelled) {
 					const imageUri = await this.uploadImageFetch(result.uri);
-					this.props.onSend({ image: imageUri });
+					this.props.onSend({ image: `${imageUri}` });
 				}
 			}
 		} catch (error) {
@@ -56,14 +56,15 @@ export default class CustomActions extends Component {
 				let location = await Location.getCurrentPositionAsync(
 					{}
 				).catch((error) => console.log(error));
-				const longitude = JSON.stringify(result.coords.longitude);
-				const altitude = JSON.stringify(result.coords.latitude);
+				const longitude = JSON.stringify(location.coords.longitude);
+				const latitude = JSON.stringify(location.coords.latitude);
 				if (location) {
 					this.props.onSend({
 						location: {
-							longitude: location.coords.longitude,
-							latitude: location.coords.latitude,
+							longitude,
+							latitude,
 						},
+						message: `${longitude} and ${latitude}`
 					});
 				}
 			}
@@ -91,7 +92,7 @@ export default class CustomActions extends Component {
 		const imageName = imageNameBefore[imageNameBefore.length - 1];
 
 		const ref = firebase.storage().ref().child(`images/${imageName}`);
-		const snapshot = await this.ref.put(blob);
+		const snapshot = await ref.put(blob);
 
 		blob.close();
 

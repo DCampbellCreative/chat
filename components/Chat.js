@@ -150,6 +150,8 @@ export default class Chat extends Component {
 			createdAt: message.createdAt,
 			user: this.state.user,
 			uid: this.state.uid,
+			image: message.image || '',
+			location: message.location || '',
 		});
 	}
 
