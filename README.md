@@ -1,12 +1,13 @@
-Chat
+# Chat
 
-A chat application created in React Native using Gifted Chat and Expo.
+<p>A mobile chat application created in React Native using Gifted Chat and Expo.
 
 Integrated with Google Firebase for message and image storage.
 
-Users can choose a username and background for their chats.
+Users can choose a username and background for their chats, send user location, camera roll photos, or newly taken photos.<p>
 
-Can send user location, camera roll photos, or newly taken photos.
+**Author: Douglass Campbell**
 
-Author: Douglass Campbell,
-Check out more of my code: https://github.com/DCampbellCreative
+View Source Code: [github.com/DCampbellCreative/chat] (https://github.com/DCampbellCreative/chat)
+
+Check out more of my code: [github.com/DCampbellCreative](https://github.com/DCampbellCreative)
